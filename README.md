@@ -82,7 +82,7 @@ This project is perfect for:
 
 ## 📎 Live Demo or Screenshot
 
-![CSV Analyzer Screenshot](your_screenshot_link_here)
+https://github.com/Salmantahir002/csv-analysis-tool/blob/main/Screenshot%202025-10-19%20232836.png
 
 ---
 
@@ -97,18 +97,19 @@ Contributions are welcome!
 
 **Salman Tahir**  
 🎓 Computer Science Student | 💡 Data Analyst  
-📧 salmantahir610@gmail.com 
-🌐 
+📧 salmantahir610@gmail.com  
+🌐 https://github.com/Salmantahir002
 
 ---
 
 ## 📜 License
 
-This project is licensed under the **MIT License** — you’re free to use, modify, and distribute it.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  
+You are free to use, modify, and distribute this software, **as long as any derivative work is also shared under the same license**.  
+For more details, see the full license text in the [LICENSE](./LICENSE) file.
 
 ---
 
 ## ⭐ Support
 
 If you find this project helpful, please **star** this repo and share it with others!
-
