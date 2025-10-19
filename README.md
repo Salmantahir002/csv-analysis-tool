@@ -1,97 +1,114 @@
-📊 CSV Statistical Analyzer
-Description:
-A web-based tool that allows users to analyze CSV files interactively. It provides statistical summaries, data visualizations, missing value handling, duplicate management, and more — all within a simple, user-friendly interface.
-Features:
-Upload and preview CSV files
+# 📊 CSV Statistical Analyzer
 
-Upload any CSV dataset
+A web-based tool that allows users to **analyze CSV files** interactively.  
+It provides **statistical summaries, data visualizations, missing value handling, duplicate management**, and more — all within a simple, user-friendly interface.
 
-Instantly preview the data in a table format
+---
 
-View dataset structure and column details
+## 🚀 Features
 
-Handle missing values
+### 1. Upload and Preview CSV Files
+- Upload any CSV dataset.
+- Instantly preview the first few rows in a clean, formatted table.
+- View dataset structure and column information.
 
-Detect missing values automatically
+### 2. Handle Missing Values
+- Automatically detect missing values.
+- Options to **fill**, **drop**, or **ignore** missing records.
+- Get instant feedback after handling them.
 
-Options to fill, drop, or ignore missing records
+### 3. Duplicate Record Management
+- Identify and remove duplicate rows.
+- Option to preview duplicates before deleting.
 
-See results instantly after processing
+### 4. Descriptive Statistics
+- View **mean**, **median**, **mode**, **min**, **max**, and **standard deviation** for numeric columns.
+- Instant summary for each feature.
 
-Manage duplicate records
+### 5. Top Features Viewer
+- Display top 5 or top N features (based on selection).
+- Compare distributions or values visually.
 
-Identify and remove duplicate rows
+### 6. Data Visualization
+- Generate **comparative analysis plots** between different columns.
+- Visualize data with **histograms, scatter plots, bar charts**, and more.
 
-Option to preview duplicates before deleting
+### 7. Code Generator Button
+- One-click button to view the **Python code** behind each analysis.
+- Copy and use the generated code directly in Jupyter Notebook for learning or reuse.
 
-Descriptive statistics
+---
 
-View mean, median, mode, min, max, and standard deviation for numeric columns
+## 🧠 How It Works
 
-Summary displayed for each feature
+1. Upload a `.csv` file from your local machine.  
+2. The app automatically loads your data and displays key statistics.  
+3. Choose operations like:
+   - Handle missing values
+   - Drop duplicates
+   - View top features
+   - Perform comparative analysis  
+4. Generate Python code snippets for the actions you perform.
 
-Top features viewer
+---
 
-Display top 5 or top N features based on user selection
+## 🛠 Technologies Used
 
-Compare data values visually
+- HTML, CSS, JavaScript
+- **Libraries:** Pandas, NumPy, Matplotlib, Seaborn (optional for visualizations)  
 
-Data visualization
+---
 
-Generate comparative analysis plots between different columns
 
-Visualize data using histograms, scatter plots, and bar charts
+---
 
-Code generator button
+## 🧩 Future Improvements
 
-A button that shows the Python code behind each analysis
+- Add correlation matrix visualization  
+- Allow exporting of processed CSV  
+- Include machine learning preview (like feature importance or predictions)  
+- Add dark/light theme switch  
 
-Copy and reuse the code directly in Jupyter Notebook
+---
 
-How it works:
+## 💡 Use Case
 
-Upload a CSV file from your computer.
+This project is perfect for:
+- **Data analysts** who want quick data insights  
+- **Students** learning data analysis and Python  
+- **Developers** building lightweight analytics dashboards  
 
-The app loads the data and shows key statistics.
+---
 
-Choose actions like handling missing values, dropping duplicates, viewing top features, or performing comparative analysis.
+## 📎 Live Demo or Screenshot
 
-Generate Python code snippets for the selected actions.
+![CSV Analyzer Screenshot](your_screenshot_link_here)
 
-Technologies used:
-Frontend: HTML, CSS, JavaScript
-Backend: Python (Flask or Streamlit depending on implementation)
-Libraries: Pandas, NumPy, Matplotlib, Seaborn (optional for plots)
+---
 
-Folder structure:
-app.py – main application file
-templates/ – contains HTML files
-static/ – contains CSS, JS, and assets
-sample_data/ – sample CSV files (optional)
-README.md – documentation
+## 🤝 Contributing
 
-Future improvements:
+Feel free to fork this repository, open issues, or submit pull requests.  
+Contributions are welcome!
 
-Add correlation matrix visualization
+---
 
-Allow exporting of processed CSV files
+## 🧑‍💻 Author
 
-Include a machine learning preview (feature importance or predictions)
+**Salman Tahir**  
+🎓 Computer Science Student | 💡 Data Analyst  
+📧 salmantahir610@gmail.com 
+🌐 
 
-Add a dark or light theme switch
+---
 
-Use cases:
-This project is suitable for:
+## 📜 License
 
-Data analysts who need quick insights from datasets
+This project is licensed under the **MIT License** — you’re free to use, modify, and distribute it.
 
-Students learning Python data analysis
+---
 
-Developers who want a lightweight analysis dashboard
+## ⭐ Support
 
-Author:
-Salman Tahir
-Computer Science Student and Data Analyst
+If you find this project helpful, please **star** this repo and share it with others!
 
-License:
-This project is licensed under the MIT License. You can use, modify, and share it freely.
