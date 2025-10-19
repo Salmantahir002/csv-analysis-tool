@@ -47,15 +47,14 @@ It provides **statistical summaries, data visualizations, missing value handling
    - Handle missing values
    - Drop duplicates
    - View top features
-   - Perform comparative analysis  
-4. Generate Python code snippets for the actions you perform.
+   - Perform comparative analysis 
 
 ---
 
 ## 🛠 Technologies Used
 
 - HTML, CSS, JavaScript
-- **Libraries:** Pandas, NumPy, Matplotlib, Seaborn (optional for visualizations)  
+- **Libraries:** Pandas, NumPy, Matplotlib, Seaborn
 
 ---
 
@@ -64,8 +63,7 @@ It provides **statistical summaries, data visualizations, missing value handling
 
 ## 🧩 Future Improvements
 
-- Add correlation matrix visualization  
-- Allow exporting of processed CSV  
+- Add correlation matrix visualization
 - Include machine learning preview (like feature importance or predictions)  
 - Add dark/light theme switch  
 
