@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Statistical Analyzer</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse for robust CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js for beautiful, interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- A modern, compatible Chart.js adapter for boxplots -->
+    <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot/build/index.umd.min.js"></script>
+    <!-- SheetJS (xlsx) for Excel file generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for a polished, professional look and feel */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* A darker gray for base */
+        }
+        .glass-card {
+            background: rgba(31, 41, 55, 0.5); /* Semi-transparent dark gray */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .heatmap-table, .preview-table, .correlation-table, .report-table {
+            border-spacing: 0;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .heatmap-table td, .heatmap-table th, .preview-table td, .preview-table th, .correlation-table td, .correlation-table th, .report-table td, .report-table th {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid #374151; /* gray-700 */
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .heatmap-table th, .preview-table th, .correlation-table th, .report-table th {
+            background-color: #1f2937; /* gray-800 */
+            font-weight: 600;
+        }
+        .preview-table tbody tr:nth-child(odd) {
+             background-color: rgba(255, 255, 255, 0.02);
+        }
+        .highlight-col {
+            background-color: #1e40af; /* blue-800 */
+        }
+        /* Custom select and input styling for dark mode */
+        select, input[type="number"], input[type="text"] {
+            background-color: #374151; /* gray-700 */
+            color: #d1d5db; /* gray-300 */
+            border-color: #4b5563; /* gray-600 */
+            transition: all 0.2s ease-in-out;
+        }
+        select:focus, input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #4f46e5; /* indigo-600 */
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+        }
+        /* Professional button styles */
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+             background: #4f46e5; color: white;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+        }
+         .btn-secondary {
+            background: #4b5563; color: white;
+        }
+        .btn-secondary:hover {
+            background: #6b7280;
+             transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-slate-800 text-gray-200">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">Comprehensive CSV Statistical Analyzer</h1>
+            <p class="text-lg text-gray-400 mt-3 max-w-2xl mx-auto">Upload, preprocess, and visualize your dataset with an advanced, intuitive toolkit.</p>
+        </header>
+
+        <!-- File Upload Section -->
+        <div class="max-w-2xl mx-auto glass-card p-6 rounded-xl shadow-lg">
+            <div class="flex items-center justify-center w-full group">
+                <label for="csv-file-input" class="flex flex-col items-center justify-center w-full h-56 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700/50 hover:bg-gray-700/80 transition-all duration-300">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-10 h-10 mb-4 text-gray-400 group-hover:text-indigo-400 transition-colors" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p class="mb-2 text-sm text-gray-400"><span class="font-semibold text-indigo-400">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-gray-500">CSV files only</p>
+                    </div>
+                    <input id="csv-file-input" type="file" class="hidden" accept=".csv" />
+                </label>
+            </div>
+            <div id="file-info" class="text-center text-sm text-gray-400 mt-4 h-5"></div>
+        </div>
+        
+        <!-- Download Report Button Container -->
+        <div id="report-button-container" class="text-center mt-8"></div>
+
+
+        <!-- Status/Error Display -->
+        <div id="status-container" class="max-w-4xl mx-auto mt-6 text-center"></div>
+
+        <!-- Preprocessing and Results Section -->
+        <div id="results-container" class="mt-12 space-y-10">
+            <!-- Content will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('csv-file-input');
+        const fileInfo = document.getElementById('file-info');
+        const resultsContainer = document.getElementById('results-container');
+        const statusContainer = document.getElementById('status-container');
+        const reportButtonContainer = document.getElementById('report-button-container');
+
+        let chartInstances = [];
+        let encodedDataGlobal = null;
+        let baseData = null; // The very first dataset loaded
+        const dataHistory = [];
+        const MAX_HISTORY_SIZE = 10;
+        
+        // --- State for Report Generation ---
+        let reportState = {
+            fileName: '',
+            rowCount: 0,
+            colCount: 0,
+            imputationSummary: [],
+            encodingSummary: null,
+            numericColumns: [],
+            categoricalColumns: [],
+            processedData: null,
+            stats: {}
+        };
+
+        // --- History Management ---
+        function pushStateToHistory(data) {
+            if (dataHistory.length >= MAX_HISTORY_SIZE) {
+                dataHistory.shift(); // Remove the oldest state if history is full
+            }
+            dataHistory.push(JSON.parse(JSON.stringify(data)));
+        }
+
+        function popStateFromHistory() {
+            return dataHistory.pop();
+        }
+
+        function clearFutureUI(currentSection) {
+            let nextElement = currentSection.nextElementSibling;
+            while (nextElement) {
+                const toRemove = nextElement;
+                nextElement = nextElement.nextElementSibling;
+                toRemove.remove();
+            }
+            currentSection.remove();
+            // Clear any lingering analysis-specific state
+            encodedDataGlobal = null;
+            reportButtonContainer.innerHTML = '';
+        }
+
+
+        fileInput.addEventListener('change', handleFileUpload);
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'text/csv' && !file.name.toLowerCase().endsWith('.csv')) {
+                displayError('Invalid file type. Please upload a .csv file.');
+                resetUI();
+                return;
+            }
+            
+            resetUI(); // Reset before parsing a new file
+            reportState.fileName = file.name; // Store file name for report
+
+            fileInfo.textContent = `File selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            displayStatus('Parsing CSV file...', 'loading');
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+                complete: setupPreprocessing,
+                error: (err) => {
+                    displayError(`CSV Parsing Error: ${err.message}`);
+                    resetUI();
+                }
+            });
+        }
+
+        function resetUI() {
+            fileInput.value = '';
+            fileInfo.textContent = '';
+            resultsContainer.innerHTML = '';
+            reportButtonContainer.innerHTML = '';
+            chartInstances.forEach(chart => chart.destroy());
+            chartInstances = [];
+            encodedDataGlobal = null;
+            baseData = null;
+            dataHistory.length = 0; // Clear history array
+            const currentFileName = reportState ? reportState.fileName : ''; // Save it safely
+            reportState = {
+                fileName: currentFileName, // Restore it
+                rowCount: 0,
+                colCount: 0,
+                imputationSummary: [],
+                encodingSummary: null,
+                numericColumns: [],
+                categoricalColumns: [],
+                processedData: null,
+                stats: {}
+            };
+        }
+
+        function displayStatus(message, type = 'success') {
+            statusContainer.innerHTML = '';
+            let bgColor, textColor, icon;
+            switch (type) {
+                case 'loading':
+                    bgColor = 'bg-blue-900/50'; textColor = 'text-blue-300';
+                    icon = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-900/50'; textColor = 'text-red-300';
+                    icon = `&#9888;`;
+                    break;
+                default:
+                    bgColor = 'bg-green-900/50'; textColor = 'text-green-300';
+                    icon = `&#10004;`;
+            }
+            statusContainer.innerHTML = `<div class="p-4 rounded-md ${bgColor} ${textColor} flex items-center justify-center shadow-lg">${icon} <span class="ml-2">${message}</span></div>`;
+        }
+
+        function displayError(message) { displayStatus(message, 'error'); }
+
+        function setupPreprocessing(results) {
+            if (!results.data || results.data.length === 0) {
+                displayError('The CSV file is empty or could not be processed.');
+                return;
+            }
+            baseData = results.data;
+            renderDataPreview(baseData);
+            renderDuplicateHandler(baseData);
+        }
+
+        function renderDataPreview(data) {
+            if (!data || data.length === 0) return;
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg';
+            const headers = Object.keys(data[0]);
+
+            let tableHTML = '<table class="preview-table"><thead><tr>';
+            headers.forEach(h => { tableHTML += `<th>${h}</th>`; });
+            tableHTML += '</tr></thead><tbody>';
+            data.slice(0, 20).forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(h => { tableHTML += `<td>${row[h] === null ? '' : row[h]}</td>`; });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            section.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-white">Dataset Preview (First 20 Rows)</h2>
+                    <button id="toggle-preview-btn" class="text-sm bg-gray-600 text-gray-200 py-1 px-3 rounded-md hover:bg-gray-500 transition-colors">Hide</button>
+                </div>
+                <div id="preview-table-container" class="overflow-x-auto">
+                    ${tableHTML}
+                </div>
+            `;
+            resultsContainer.appendChild(section);
+
+            const toggleBtn = document.getElementById('toggle-preview-btn');
+            const tableContainer = document.getElementById('preview-table-container');
+
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = tableContainer.classList.toggle('hidden');
+                toggleBtn.textContent = isHidden ? 'Show' : 'Hide';
+            });
+        }
+
+
+        function findDuplicates(data, subset) {
+            const seen = new Set();
+            const uniqueIndices = new Set();
+            
+            data.forEach((row, index) => {
+                const rowString = subset.map(h => row[h]).join('||');
+                if (!seen.has(rowString)) {
+                    seen.add(rowString);
+                    uniqueIndices.add(index);
+                }
+            });
+
+            const uniqueData = Array.from(uniqueIndices).map(i => data[i]);
+            
+            const duplicateRowsForPreview = [];
+            const seenForPreview = new Set();
+             data.forEach((row, index) => {
+                 const rowString = subset.map(h => row[h]).join('||');
+                 if(seenForPreview.has(rowString)){
+                      duplicateRowsForPreview.push(row);
+                 } else {
+                      seenForPreview.add(rowString);
+                 }
+             });
+
+            return { duplicates: duplicateRowsForPreview, uniqueData };
+        }
+
+        function renderDuplicateHandler(data) {
+            const headers = Object.keys(data[0] || {});
+            const options = headers.map(h => `<option value="${h}">${h}</option>`).join('');
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">1. Duplicate Record Handling</h2>
+                <p class="text-gray-400 mb-4">Select columns to check for duplicate values. If none are selected, it will check for entire duplicate rows.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="duplicate-columns-select" class="block text-sm font-medium text-gray-300">Check duplicates based on:</label>
+                        <select id="duplicate-columns-select" multiple class="mt-1 block w-full rounded-md shadow-sm" size="5">${options}</select>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                         <button id="find-duplicates-btn" class="btn btn-primary w-full">Find</button>
+                         <button id="skip-duplicates-btn" class="btn btn-secondary w-full">Skip</button>
+                    </div>
+                </div>
+                <div id="duplicate-results-container" class="hidden mt-4"></div>
+            `;
+            resultsContainer.appendChild(section);
+
+            const handleAction = (processedData, message) => {
+                pushStateToHistory(data);
+                section.innerHTML = `
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-2">Duplicate Record Handling</h2>
+                    <p class="text-gray-400">${message}</p>
+                    <div class="mt-4" id="undo-container-duplicates"></div>`;
+                
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'btn btn-secondary';
+                undoBtn.textContent = 'Undo';
+                undoBtn.onclick = () => {
+                    const restoredData = popStateFromHistory();
+                    clearFutureUI(section);
+                    if (restoredData) {
+                       renderDuplicateHandler(restoredData);
+                    } else {
+                       renderDuplicateHandler(baseData);
+                    }
+                };
+                section.querySelector('#undo-container-duplicates').appendChild(undoBtn);
+                renderDataTypeConverter(processedData);
+            };
+
+            document.getElementById('find-duplicates-btn').addEventListener('click', () => {
+                const select = document.getElementById('duplicate-columns-select');
+                let subset = Array.from(select.selectedOptions).map(opt => opt.value);
+                if (subset.length === 0) subset = headers;
+
+                const { duplicates, uniqueData } = findDuplicates(data, subset);
+                const resultsDiv = document.getElementById('duplicate-results-container');
+                resultsDiv.classList.remove('hidden');
+
+                if (duplicates.length === 0) {
+                    resultsDiv.innerHTML = `<p class="p-4 bg-green-900/50 text-green-300 rounded-md">No duplicate rows found based on selected criteria.</p>`;
+                    setTimeout(() => handleAction(data, 'No duplicates found to remove.'), 1500);
+                    return;
+                }
+
+                let tableHTML = '<table class="preview-table"><thead><tr>';
+                headers.forEach(h => { tableHTML += `<th class="${subset.includes(h) ? 'highlight-col': ''}">${h}</th>`; });
+                tableHTML += '</tr></thead><tbody>';
+                duplicates.slice(0, 5).forEach(row => {
+                    tableHTML += '<tr>';
+                    headers.forEach(h => { tableHTML += `<td class="${subset.includes(h) ? 'highlight-col': ''}">${row[h]}</td>`; });
+                    tableHTML += '</tr>';
+                });
+                tableHTML += '</tbody></table>';
+
+                resultsDiv.innerHTML = `
+                    <div class="p-4 bg-yellow-900/50 text-yellow-300 rounded-md"><p>Found <strong>${duplicates.length}</strong> duplicate row(s).</p></div>
+                    <div class="mt-4"><h3 class="text-lg font-semibold mb-2 text-white">Preview of Duplicates</h3><div class="overflow-x-auto">${tableHTML}</div></div>
+                    <div class="mt-6 flex gap-4"><button id="remove-duplicates-btn" class="btn bg-red-600 text-white w-full hover:bg-red-700">Remove ${duplicates.length} Duplicates</button></div>`;
+                
+                document.getElementById('remove-duplicates-btn').addEventListener('click', () => {
+                    handleAction(uniqueData, `Removed ${duplicates.length} duplicate rows.`);
+                });
+            });
+
+            document.getElementById('skip-duplicates-btn').addEventListener('click', () => {
+                handleAction(data, 'Skipped duplicate handling.');
+            });
+        }
+        
+        function renderDataTypeConverter(data) {
+            const headers = Object.keys(data[0] || {});
+            
+            const detectDataType = (values) => {
+                const nonNull = values.filter(v => v !== null && v !== "" && v !== undefined);
+                if (nonNull.length === 0) return 'String';
+                if (nonNull.every(v => typeof v === 'number')) {
+                    return nonNull.every(v => Number.isInteger(v)) ? 'Integer' : 'Float';
+                }
+                return 'String';
+            };
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg';
+            let rowsHTML = '';
+
+            headers.forEach(header => {
+                const currentType = detectDataType(data.map(row => row[header]));
+                rowsHTML += `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center border-t border-gray-700 py-3">
+                        <div>
+                            <p class="font-semibold text-gray-200">${header}</p>
+                            <p class="text-sm text-gray-400">Current Type: <span class="font-semibold">${currentType}</span></p>
+                        </div>
+                        <div class="md:col-span-2">
+                             <label for="type-select-${header}" class="sr-only">New Type for ${header}</label>
+                            <select id="type-select-${header}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md shadow-sm" data-original-type="${currentType}">
+                                <option value="integer" ${currentType === 'Integer' ? 'selected' : ''}>Integer</option>
+                                <option value="float" ${currentType === 'Float' ? 'selected' : ''}>Float</option>
+                                <option value="string" ${currentType === 'String' ? 'selected' : ''}>String</option>
+                                <option value="datetime">Date/Time</option>
+                            </select>
+                        </div>
+                    </div>`;
+            });
+
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">2. Data Type Conversion</h2>
+                <p class="text-gray-400 mb-4">Review and adjust the data type for each column before proceeding.</p>
+                <div>${rowsHTML}</div>
+                <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                    <button id="apply-conversion-btn" class="btn btn-primary flex-1">Apply & Continue</button>
+                    <button id="skip-conversion-btn" class="btn btn-secondary flex-1">Skip & Continue</button>
+                </div>`;
+            resultsContainer.appendChild(section);
+            
+            const handleAction = (processedData, message) => {
+                pushStateToHistory(data);
+                section.innerHTML = `<h2 class="text-xl md:text-2xl font-bold text-white mb-2">Data Type Conversion</h2><p class="text-gray-400">${message}</p><div class="mt-4" id="undo-container-types"></div>`;
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'btn btn-secondary';
+                undoBtn.textContent = 'Undo';
+                undoBtn.onclick = () => {
+                    const restoredData = popStateFromHistory();
+                    clearFutureUI(section);
+                    if (restoredData) renderDataTypeConverter(restoredData);
+                };
+                section.querySelector('#undo-container-types').appendChild(undoBtn);
+                handleMissingValues(processedData);
+            };
+
+            document.getElementById('apply-conversion-btn').addEventListener('click', () => {
+                let convertedData = JSON.parse(JSON.stringify(data));
+                let conversionError = false;
+
+                for (const header of headers) {
+                    const select = document.getElementById(`type-select-${header}`);
+                    const targetType = select.value;
+                    const originalType = select.dataset.originalType.toLowerCase();
+
+                    if (targetType.toLowerCase() !== originalType) {
+                        const result = convertColumnType(convertedData, header, targetType);
+                        if (!result.success) {
+                            displayError(result.error);
+                            conversionError = true;
+                            break;
+                        }
+                        convertedData = result.data;
+                    }
+                }
+                
+                if (!conversionError) {
+                    handleAction(convertedData, 'Conversions applied successfully.');
+                }
+            });
+
+            document.getElementById('skip-conversion-btn').addEventListener('click', () => {
+                handleAction(data, 'Skipped data type conversion.');
+            });
+        }
+
+        function convertColumnType(data, column, targetType) {
+            let conversionFunction;
+            switch(targetType) {
+                case 'integer':
+                    conversionFunction = (val) => {
+                        const num = parseInt(val, 10);
+                        if (isNaN(num)) throw new Error(`'${val}' cannot be converted to an Integer.`);
+                        return num;
+                    };
+                    break;
+                case 'float':
+                    conversionFunction = (val) => {
+                        const num = parseFloat(val);
+                        if (isNaN(num)) throw new Error(`'${val}' cannot be converted to a Float.`);
+                        return num;
+                    };
+                    break;
+                case 'string':
+                    conversionFunction = (val) => String(val);
+                    break;
+                case 'datetime':
+                     conversionFunction = (val) => {
+                        const date = new Date(val);
+                        if (isNaN(date.getTime())) throw new Error(`'${val}' cannot be converted to a Date/Time.`);
+                        return date.toISOString();
+                    };
+                    break;
+                default:
+                    return { success: true, data };
+            }
+
+            try {
+                for(const row of data) {
+                    if(row[column] !== null && row[column] !== '' && row[column] !== undefined) {
+                        row[column] = conversionFunction(row[column]);
+                    }
+                }
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: `Error in column '${column}': ${error.message}` };
+            }
+        }
+        
+        function handleMissingValues(data) {
+            const headers = Object.keys(data[0] || {});
+            const missingValueInfo = headers.map(header => ({
+                name: header,
+                count: data.filter(row => row[header] === null || row[header] === '' || row[header] === undefined).length,
+                isNumeric: data.every(row => typeof row[header] === 'number' || row[header] === null || row[header] === '' || row[header] === undefined)
+            })).filter(col => col.count > 0);
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg';
+            resultsContainer.appendChild(section);
+
+            if (missingValueInfo.length === 0) {
+                pushStateToHistory(data);
+                section.innerHTML = `<h2 class="text-xl md:text-2xl font-bold text-white mb-2">3. Missing Value Handling</h2><p class="text-gray-400">No missing values found in the dataset.</p>`;
+                reportState.imputationSummary = ['No missing values found.'];
+                runFullAnalysis(data);
+            } else {
+                renderInteractiveImputationUI(section, data, missingValueInfo);
+            }
+        }
+        
+        function renderInteractiveImputationUI(section, data, missingValueInfo) {
+            let rowsHTML = '';
+            missingValueInfo.forEach(col => {
+                let options = '<option value="mode">Mode</option><option value="custom">Custom Value</option>';
+                if (col.isNumeric) {
+                    options = '<option value="mean">Mean</option><option value="median">Median</option>' + options;
+                }
+                rowsHTML += `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center border-t border-gray-700 py-3">
+                        <div><p class="font-semibold text-gray-200">${col.name}</p><p class="text-sm text-gray-400">${col.count} missing</p></div>
+                        <div><select id="method-${col.name}" class="w-full rounded-md">${options}</select></div>
+                        <div><input type="text" id="custom-${col.name}" class="hidden w-full rounded-md" placeholder="Custom value"></div>
+                    </div>`;
+            });
+            
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b pb-2 border-gray-700">3. Handle Missing Values</h2>
+                <p class="text-gray-400 mb-4">Choose a method to fill missing values for each column.</p>
+                <div>${rowsHTML}</div>
+                <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                    <button id="apply-imputation-btn" class="btn btn-primary flex-1">Apply Imputation</button>
+                    <button id="skip-imputation-btn" class="btn btn-secondary flex-1">Skip & Continue</button>
+                </div>`;
+
+            missingValueInfo.forEach(col => {
+                const methodSelect = document.getElementById(`method-${col.name}`);
+                const customInput = document.getElementById(`custom-${col.name}`);
+                methodSelect.addEventListener('change', () => customInput.classList.toggle('hidden', methodSelect.value !== 'custom'));
+            });
+
+            document.getElementById('apply-imputation-btn').addEventListener('click', () => {
+                pushStateToHistory(data);
+                const { cleanedData, summary } = applyImputation(data, missingValueInfo);
+                reportState.imputationSummary = summary;
+                
+                const summaryList = summary.map(item => `<li class="p-2 bg-gray-700/50 rounded-md text-gray-300">${item}</li>`).join('');
+                section.innerHTML = `
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b pb-2 border-gray-700">Missing Value Summary</h2>
+                    <ul class="space-y-2">${summaryList.length > 0 ? summaryList : '<li>No changes applied.</li>'}</ul>
+                    <div class="mt-4" id="undo-container-imputation"></div>`;
+                
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'btn btn-secondary';
+                undoBtn.textContent = 'Undo';
+                undoBtn.onclick = () => {
+                    const restoredData = popStateFromHistory();
+                    clearFutureUI(section);
+                    if (restoredData) handleMissingValues(restoredData);
+                };
+                section.querySelector('#undo-container-imputation').appendChild(undoBtn);
+                
+                runFullAnalysis(cleanedData);
+            });
+
+            document.getElementById('skip-imputation-btn').addEventListener('click', () => {
+                pushStateToHistory(data);
+                section.innerHTML = `
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b pb-2 border-gray-700">Missing Value Summary</h2>
+                    <p class="text-gray-400">Skipped missing value imputation.</p>
+                    <div class="mt-4" id="undo-container-imputation"></div>`;
+                
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'btn btn-secondary';
+                undoBtn.textContent = 'Undo';
+                undoBtn.onclick = () => {
+                    const restoredData = popStateFromHistory();
+                    clearFutureUI(section);
+                    if (restoredData) handleMissingValues(restoredData);
+                };
+                section.querySelector('#undo-container-imputation').appendChild(undoBtn);
+                
+                runFullAnalysis(data);
+            });
+        }
+        
+        function applyImputation(data, missingValueInfo) {
+            const cleanedData = JSON.parse(JSON.stringify(data));
+            const summary = [];
+
+            missingValueInfo.forEach(col => {
+                const header = col.name;
+                const method = document.getElementById(`method-${header}`).value;
+                const customInput = document.getElementById(`custom-${header}`).value;
+                const values = data.map(row => row[header]).filter(val => val !== null && val !== '' && val !== undefined);
+                
+                let replacementValue;
+                switch (method) {
+                    case 'mean':
+                        replacementValue = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+                        break;
+                    case 'median':
+                        if (values.length === 0) { replacementValue = 0; break; }
+                        const sorted = [...values].sort((a, b) => a - b);
+                        const mid = Math.floor(sorted.length / 2);
+                        replacementValue = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+                        break;
+                    case 'mode':
+                        if (values.length === 0) { replacementValue = ''; break; }
+                        const modeMap = values.reduce((acc, val) => { acc[val] = (acc[val] || 0) + 1; return acc; }, {});
+                        replacementValue = Object.keys(modeMap).reduce((a, b) => modeMap[a] > modeMap[b] ? a : b, '');
+                        break;
+                    case 'custom':
+                        replacementValue = col.isNumeric && !isNaN(parseFloat(customInput)) ? parseFloat(customInput) : customInput;
+                        break;
+                }
+                
+                let count = 0;
+                cleanedData.forEach(row => {
+                    if (row[header] === null || row[header] === '' || row[header] === undefined) {
+                        row[header] = replacementValue;
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    const displayVal = typeof replacementValue === 'number' ? replacementValue.toFixed(2) : `'${replacementValue}'`;
+                    summary.push(`Filled ${count} missing value(s) in <strong>${header}</strong> with ${method} (${displayVal}).`);
+                }
+            });
+            return { cleanedData, summary };
+        }
+        
+        function runFullAnalysis(data) {
+            reportState.processedData = data;
+            renderDownloadSection();
+             displayStatus('Analysis complete. Results below.', 'success');
+            const headers = Object.keys(data[0]);
+            const numericColumns = headers.filter(header => data.every(row => typeof row[header] === 'number'));
+            const categoricalColumns = headers.filter(header => !numericColumns.includes(header));
+             
+            // Save state for report
+            reportState.rowCount = data.length;
+            reportState.colCount = headers.length;
+            reportState.numericColumns = numericColumns;
+            reportState.categoricalColumns = categoricalColumns;
+
+            if (numericColumns.length === 0 && categoricalColumns.length > 0) {
+                 renderCategoricalAnalysis(categoricalColumns, data);
+                 renderEncodingSection(categoricalColumns, data);
+                 renderReportButton();
+                 return;
+            } else if (numericColumns.length === 0) {
+                displayError('No numeric or categorical columns found to analyze.');
+                return;
+            }
+            
+            // Generate analysis for each numeric column
+            numericColumns.forEach(header => {
+                const columnData = data.map(row => row[header]);
+                if(columnData.length > 0) {
+                    const stats = calculateAllStats(columnData);
+                    reportState.stats[header] = stats; // Save stats for report
+                    renderColumnAnalysis(header, stats, columnData);
+                }
+            });
+            
+            if (categoricalColumns.length > 0) {
+                renderCategoricalAnalysis(categoricalColumns, data);
+            }
+            if (numericColumns.length >= 2) {
+                renderAdvancedCorrelationSection(numericColumns, data);
+            }
+            if (numericColumns.length >= 1) {
+                 renderBivariateAnalysisSection(numericColumns, categoricalColumns, data);
+            }
+            if (numericColumns.length >= 2) {
+                renderComparativeHistogramSection(numericColumns, data);
+                renderMultivariateAnalysisSection(numericColumns, data);
+            }
+            if (categoricalColumns.length > 0) {
+                renderEncodingSection(categoricalColumns, data);
+            }
+            
+            // Show Download Report Button
+            renderReportButton();
+        }
+        
+        function renderDownloadSection() {
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Download Processed Data</h2>
+                <p class="text-gray-400 mb-4">Download the cleaned and processed dataset in your preferred format.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="download-csv-btn" class="btn bg-green-600 hover:bg-green-700 text-white">Download CSV</button>
+                    <button id="download-excel-btn" class="btn bg-blue-600 hover:bg-blue-700 text-white">Download Excel</button>
+                    <button id="download-json-btn" class="btn bg-yellow-500 hover:bg-yellow-600 text-white">Download JSON</button>
+                </div>
+            `;
+            
+            resultsContainer.appendChild(section);
+           
+            const getFileName = (extension) => {
+                const timestamp = new Date().toISOString().replace(/[-:.]/g, '').replace('T', '_').slice(0, -4);
+                return `${reportState.fileName.replace('.csv', '')}_processed_${timestamp}.${extension}`;
+            };
+
+            document.getElementById('download-csv-btn').addEventListener('click', () => {
+                const dataToDownload = encodedDataGlobal || reportState.processedData;
+                const csv = Papa.unparse(dataToDownload);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = getFileName('csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            document.getElementById('download-json-btn').addEventListener('click', () => {
+                const dataToDownload = encodedDataGlobal || reportState.processedData;
+                const json = JSON.stringify(dataToDownload, null, 2);
+                const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = getFileName('json');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            document.getElementById('download-excel-btn').addEventListener('click', () => {
+                const dataToDownload = encodedDataGlobal || reportState.processedData;
+                const worksheet = XLSX.utils.json_to_sheet(dataToDownload);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Processed Data");
+                XLSX.writeFile(workbook, getFileName('xlsx'));
+            });
+        }
+
+
+        function calculateAllStats(data) {
+            const sortedData = [...data].sort((a, b) => a - b);
+            const n = sortedData.length;
+            if (n === 0) return { mean: 0, median: 0, mode: 'N/A', variance: 0, stdDev: 0, fiveNumberSummary: { min: 0, q1: 0, median: 0, q3: 0, max: 0 } };
+            const mean = data.reduce((a, b) => a + b, 0) / n;
+            const median = n % 2 === 0 ? (sortedData[n/2 - 1] + sortedData[n/2]) / 2 : sortedData[Math.floor(n/2)];
+            const modeMap = {}; let maxCount = 0; let modes = [];
+            data.forEach(val => {
+                modeMap[val] = (modeMap[val] || 0) + 1;
+                if (modeMap[val] > maxCount) { maxCount = modeMap[val]; modes = [val]; }
+                else if (modeMap[val] === maxCount) { modes.push(val); }
+            });
+            const mode = new Set(modes).size === new Set(data).size ? 'N/A' : modes.join(', ');
+            const variance = n > 1 ? data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1) : 0;
+            const stdDev = Math.sqrt(variance);
+            const fiveNumberSummary = {
+                min: sortedData[0], q1: sortedData[Math.floor(n * 0.25)], median,
+                q3: sortedData[Math.floor(n * 0.75)], max: sortedData[n - 1]
+            };
+            return { mean, median, mode, variance, stdDev, fiveNumberSummary };
+        }
+
+        function renderColumnAnalysis(header, stats, data) {
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            const statsGrid = Object.entries(stats).map(([key, value]) => {
+                if (key === 'fiveNumberSummary') {
+                    const summary = Object.entries(value).map(([sKey, sVal]) => `${sKey.toUpperCase()}: ${sVal !== undefined ? sVal.toFixed(2) : 'N/A'}`).join(', ');
+                    return `<div class="bg-gray-700/50 p-3 rounded-lg col-span-1 md:col-span-2"><dt class="font-semibold text-gray-200">Five-Number Summary</dt><dd class="text-gray-400 mt-1">${summary}</dd></div>`;
+                }
+                const formattedValue = typeof value === 'number' ? value.toFixed(4) : value;
+                return `<div class="bg-gray-700/50 p-3 rounded-lg"><dt class="font-semibold text-gray-200 capitalize">${key.replace('StdDev', 'Standard Deviation')}</dt><dd class="text-gray-400 mt-1">${formattedValue}</dd></div>`;
+            }).join('');
+            
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Individual Analysis: <span class="text-indigo-400">${header}</span></h2>
+                <div class="mb-6"><h3 class="text-xl font-semibold mb-3 text-white">Summary Statistics</h3><dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">${statsGrid}</dl></div>
+                <div><h3 class="text-xl font-semibold mb-4 text-white">Visualizations</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div><h4 class="text-lg font-medium text-center mb-2 text-gray-300">Distribution</h4><div class="chart-container"><canvas id="hist-${header}"></canvas></div></div>
+                    <div><h4 class="text-lg font-medium text-center mb-2 text-gray-300">Box Plot</h4><div class="chart-container"><canvas id="box-${header}"></canvas></div></div>
+                </div></div>
+                <div class="mt-8 pt-6 border-t border-gray-700">
+                    <h3 class="text-xl font-semibold mb-4 text-white">Outlier Detection</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label for="outlier-method-${header}" class="block text-sm font-medium text-gray-300">Method:</label>
+                            <select id="outlier-method-${header}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md">
+                                <option value="iqr">IQR (Interquartile Range)</option>
+                                <option value="zscore">Z-Score</option>
+                            </select>
+                        </div>
+                        <div id="zscore-threshold-container-${header}" class="hidden">
+                            <label for="zscore-threshold-${header}" class="block text-sm font-medium text-gray-300">Z-Score Threshold:</label>
+                            <input type="number" id="zscore-threshold-${header}" value="3" class="mt-1 block w-full rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <button id="detect-outliers-btn-${header}" class="btn btn-secondary w-full">Find Outliers</button>
+                        </div>
+                    </div>
+                    <div id="outlier-results-${header}" class="mt-4 text-sm text-gray-300"></div>
+                </div>`;
+            resultsContainer.appendChild(section);
+
+            createHistogram(`hist-${header}`, data, header);
+            createBoxPlot(`box-${header}`, data, header);
+
+            const methodSelect = document.getElementById(`outlier-method-${header}`);
+            const zScoreContainer = document.getElementById(`zscore-threshold-container-${header}`);
+            const detectBtn = document.getElementById(`detect-outliers-btn-${header}`);
+            const resultsDiv = document.getElementById(`outlier-results-${header}`);
+
+            methodSelect.addEventListener('change', () => {
+                zScoreContainer.classList.toggle('hidden', methodSelect.value !== 'zscore');
+            });
+
+            detectBtn.addEventListener('click', () => {
+                const method = methodSelect.value;
+                const threshold = parseFloat(document.getElementById(`zscore-threshold-${header}`).value);
+                const outliers = findOutliers(data, stats, method, threshold);
+
+                updateBoxPlotWithOutliers(`box-${header}`, header, data, outliers);
+
+                if (outliers.length > 0) {
+                    resultsDiv.innerHTML = `<p class="p-3 bg-gray-700/50 rounded-md">Found <strong>${outliers.length}</strong> outliers: <span class="font-mono bg-gray-900/50 p-1 rounded">${outliers.map(o => o.toFixed(2)).join(', ')}</span></p>`;
+                } else {
+                    resultsDiv.innerHTML = `<p class="p-3 bg-gray-700/50 rounded-md">No outliers found with the selected method.</p>`;
+                }
+            });
+        }
+        
+        function renderCategoricalAnalysis(categoricalColumns, data) {
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            const options = categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Categorical Feature Analysis</h2>
+                <p class="text-gray-400 mb-4">Select a categorical feature to see its distribution.</p>
+                <div class="mb-4 max-w-sm">
+                     <label for="categorical-select" class="block text-sm font-medium text-gray-300">Feature:</label>
+                     <select id="categorical-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md">${options}</select>
+                </div>
+                <div class="chart-container"><canvas id="pie-chart"></canvas></div>`;
+            resultsContainer.appendChild(section);
+
+            const categoricalSelect = document.getElementById('categorical-select');
+
+            function updatePieChart() {
+                const existingChart = Chart.getChart('pie-chart');
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+                const selectedColumn = categoricalSelect.value;
+                createPieChart('pie-chart', data, selectedColumn);
+            }
+
+            categoricalSelect.addEventListener('change', updatePieChart);
+            updatePieChart();
+        }
+
+        function renderComparativeHistogramSection(numericColumns, data) {
+            const options = numericColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Comparative Distribution Analysis</h2>
+                <p class="text-gray-400 mb-4">Select multiple features to compare their distributions.</p>
+                <div class="mb-4">
+                    <label for="compare-hist-select" class="block text-sm font-medium text-gray-300">Select features to compare:</label>
+                    <select id="compare-hist-select" multiple class="mt-1 block w-full rounded-md shadow-sm" size="5">${options}</select>
+                </div>
+                <div class="chart-container"><canvas id="comparative-histogram"></canvas></div>`;
+            resultsContainer.appendChild(section);
+
+            const select = document.getElementById('compare-hist-select');
+            let compHistChart = null;
+
+            select.addEventListener('change', () => {
+                const selectedColumns = Array.from(select.selectedOptions).map(opt => opt.value);
+                if (compHistChart) compHistChart.destroy();
+                if (selectedColumns.length > 0) {
+                    compHistChart = createComparativeHistogram('comparative-histogram', data, selectedColumns);
+                }
+            });
+        }
+        
+        function renderAdvancedCorrelationSection(numericColumns, data) {
+            if (numericColumns.length < 2) return;
+            const numericOptions = numericColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+            let fullCorrelationResults = [];
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Advanced Target Correlation Analysis</h2>
+                <p class="text-gray-400 mb-4">Select one or more target variables to find the most correlated features.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-end">
+                    <div class="md:col-span-2">
+                        <label for="adv-corr-target-select" class="block text-sm font-medium text-gray-300">Target Variable(s):</label>
+                        <select id="adv-corr-target-select" multiple class="mt-1 block w-full rounded-md shadow-sm" size="5">${numericOptions}</select>
+                    </div>
+                    <div>
+                        <label for="adv-corr-top-n" class="block text-sm font-medium text-gray-300">Number of Top Features:</label>
+                        <input id="adv-corr-top-n" type="number" value="10" min="1" class="mt-1 block w-full rounded-md shadow-sm">
+                        <button id="adv-corr-show-btn" class="mt-2 btn btn-primary w-full">Show</button>
+                    </div>
+                </div>
+                <div id="adv-corr-results-container" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2 text-white">Correlation Results</h3>
+                        <div id="adv-corr-table-container" class="overflow-x-auto"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2 text-white">Correlation Visualization</h3>
+                        <div class="chart-container" style="height: 500px;"><canvas id="adv-corr-chart"></canvas></div>
+                    </div>
+                    <div class="text-center">
+                        <button id="adv-corr-download-btn" class="btn bg-green-600 hover:bg-green-700 text-white">Download Full Results</button>
+                    </div>
+                </div>`;
+            resultsContainer.appendChild(section);
+
+            const showBtn = document.getElementById('adv-corr-show-btn');
+            const downloadBtn = document.getElementById('adv-corr-download-btn');
+
+            showBtn.addEventListener('click', () => {
+                const targets = Array.from(document.getElementById('adv-corr-target-select').selectedOptions).map(opt => opt.value);
+                const topN = parseInt(document.getElementById('adv-corr-top-n').value);
+                
+                if (targets.length === 0) {
+                    alert('Please select at least one target variable.');
+                    return;
+                }
+
+                const otherFeatures = numericColumns.filter(col => !targets.includes(col));
+                fullCorrelationResults = otherFeatures.map(feature => {
+                    let totalCorr = 0;
+                    targets.forEach(target => {
+                        totalCorr += Math.abs(calculateCorrelation(data.map(row => row[feature]), data.map(row => row[target])));
+                    });
+                    return {
+                        feature: feature,
+                        'Average Absolute Correlation': totalCorr / targets.length
+                    };
+                }).sort((a, b) => b['Average Absolute Correlation'] - a['Average Absolute Correlation']);
+
+                const topResults = fullCorrelationResults.slice(0, topN);
+
+                // Render table
+                const tableContainer = document.getElementById('adv-corr-table-container');
+                let tableHTML = '<table class="correlation-table"><thead><tr><th>Feature</th><th>Average Absolute Correlation</th></tr></thead><tbody>';
+                topResults.forEach(item => {
+                    tableHTML += `<tr><td>${item.feature}</td><td>${item['Average Absolute Correlation'].toFixed(4)}</td></tr>`;
+                });
+                tableHTML += '</tbody></table>';
+                tableContainer.innerHTML = tableHTML;
+                
+                // Render chart
+                createCorrelationBarChart('adv-corr-chart', topResults.map(i => i.feature).reverse(), topResults.map(i => i['Average Absolute Correlation']).reverse());
+
+                document.getElementById('adv-corr-results-container').classList.remove('hidden');
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                if (fullCorrelationResults.length > 0) {
+                    const csv = Papa.unparse(fullCorrelationResults);
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "correlation_results.csv");
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        }
+        
+        function renderBivariateAnalysisSection(numericColumns, categoricalColumns, data) {
+            if (categoricalColumns.length === 0 && numericColumns.length < 2) return;
+
+            const numericOptions = numericColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+            const categoricalOptions = categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Bivariate Analysis</h2>
+                <p class="text-gray-400 mb-4">Explore relationships between variables.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-start">
+                    <div>
+                        <label for="chart-type-select" class="block text-sm font-medium text-gray-300">Chart Type:</label>
+                        <select id="chart-type-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md"><option value="scatter">Scatter Plot</option><option value="bar">Bar Chart</option><option value="boxplot">Box Plot</option></select>
+                    </div>
+                    <div>
+                        <label id="var1-label" for="var1-select" class="block text-sm font-medium text-gray-300">Feature 1:</label>
+                        <select id="var1-select" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div>
+                        <label id="var2-label" for="var2-select" class="block text-sm font-medium text-gray-300">Feature 2 (Multiple):</label>
+                        <select id="var2-select" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="bivariate-chart"></canvas></div>`;
+            resultsContainer.appendChild(section);
+
+            const chartTypeSelect = document.getElementById('chart-type-select');
+            const var1Select = document.getElementById('var1-select');
+            const var2Select = document.getElementById('var2-select');
+            const var1Label = document.getElementById('var1-label');
+            const var2Label = document.getElementById('var2-label');
+
+            function setupSelectors() {
+                const chartType = chartTypeSelect.value;
+                var1Select.multiple = false; var2Select.multiple = false;
+                var1Select.size = 1; var2Select.size = 1;
+
+                if (chartType === 'scatter') {
+                    var1Label.textContent = 'X-Axis (Numeric):'; var2Label.textContent = 'Y-Axis (Numeric):';
+                    var1Select.innerHTML = numericOptions; var2Select.innerHTML = numericOptions;
+                    if (numericColumns.length > 1) { var2Select.selectedIndex = 1; }
+                } else {
+                    var1Label.textContent = 'Categorical Feature:'; var2Label.textContent = 'Numerical Feature(s):';
+                    var1Select.innerHTML = categoricalOptions; var2Select.innerHTML = numericOptions;
+                    var2Select.multiple = true; var2Select.size = 5;
+                }
+                updateBivariateChart();
+            }
+
+            function updateBivariateChart() {
+                const existingChart = Chart.getChart('bivariate-chart');
+                if (existingChart) existingChart.destroy();
+                
+                const chartType = chartTypeSelect.value;
+                const var1 = var1Select.value;
+                let var2 = var2Select.multiple ? Array.from(var2Select.selectedOptions).map(opt => opt.value) : [var2Select.value];
+                
+                if (!var1 || !var2[0] || (chartType === 'scatter' && var1 === var2[0])) {
+                    const ctx = document.getElementById('bivariate-chart').getContext('2d');
+                    if(ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    return;
+                }
+                const canvasId = 'bivariate-chart';
+                switch (chartType) {
+                    case 'scatter':
+                        if (numericColumns.length < 2) return;
+                        createScatterPlot(canvasId, data.map(row => ({ x: row[var1], y: row[var2[0]] })), var1, var2[0]);
+                        break;
+                    case 'bar':
+                        if (categoricalColumns.length < 1 || var2.length === 0) return;
+                        createComparisonBarChart(canvasId, data, var1, var2);
+                        break;
+                    case 'boxplot':
+                        if (categoricalColumns.length < 1 || var2.length === 0) return;
+                        createComparisonBoxPlot(canvasId, data, var1, var2);
+                        break;
+                }
+            }
+            chartTypeSelect.addEventListener('change', setupSelectors);
+            var1Select.addEventListener('change', updateBivariateChart);
+            var2Select.addEventListener('change', updateBivariateChart);
+            setupSelectors();
+        }
+
+        function renderMultivariateAnalysisSection(numericColumns, data) {
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Multivariate Analysis</h2>
+                <div>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Correlation Heatmap</h3>
+                    <p class="text-gray-400 mb-4">Shows the correlation coefficient between pairs of numerical features.</p>
+                    <div id="heatmap-container" class="overflow-x-auto"></div>
+                </div>`;
+            resultsContainer.appendChild(section);
+            createHeatmap('heatmap-container', numericColumns, data);
+        }
+        
+        function renderEncodingSection(categoricalColumns, data) {
+            const section = document.createElement('div');
+            section.className = 'glass-card p-6 rounded-xl shadow-lg analysis-section';
+
+            if (categoricalColumns.length === 0) {
+                section.innerHTML = `
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Data Encoding</h2>
+                    <p class="text-gray-400">No categorical features found for encoding.</p>
+                `;
+                resultsContainer.appendChild(section);
+                return;
+            }
+            
+            const options = categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Data Encoding</h2>
+                <p class="text-gray-400 mb-4">Transform categorical features into a numerical format for machine learning models.</p>
+                
+                <div class="mb-4">
+                    <label class="flex items-center space-x-2 text-sm text-gray-300">
+                        <input type="checkbox" id="show-types-checkbox" class="rounded bg-gray-600 border-gray-500 text-indigo-500 focus:ring-indigo-500">
+                        <span>Show detected data types</span>
+                    </label>
+                    <div id="data-types-container" class="hidden mt-3 p-3 bg-gray-900/50 rounded-md text-sm"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-end">
+                    <div class="md:col-span-2">
+                        <label for="encoding-columns-select" class="block text-sm font-medium text-gray-300">Columns to encode:</label>
+                        <select id="encoding-columns-select" multiple class="mt-1 block w-full rounded-md shadow-sm" size="5">${options}</select>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="encoding-type-select" class="block text-sm font-medium text-gray-300">Method:</label>
+                        <select id="encoding-type-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md"><option value="label">Label Encoding</option><option value="onehot">One-Hot Encoding</option></select>
+                        <button id="apply-encoding-btn" class="btn btn-primary w-full">Apply</button>
+                    </div>
+                </div>
+                <div id="encoding-preview-container" class="space-y-6 hidden">
+                    <div><h3 class="text-xl font-semibold mb-2 text-white">Preview: Before Encoding</h3><div id="before-encoding-table" class="overflow-x-auto"></div></div>
+                    <div><h3 class="text-xl font-semibold mb-2 text-white">Preview: After Encoding</h3><div id="after-encoding-table" class="overflow-x-auto"></div></div>
+                </div>
+                <div class="mt-6 text-center">
+                     <button id="download-encoded-btn" class="hidden btn bg-green-600 hover:bg-green-700 text-white">Download Encoded CSV</button>
+                </div>`;
+            resultsContainer.appendChild(section);
+
+            const showTypesCheckbox = document.getElementById('show-types-checkbox');
+            const dataTypesContainer = document.getElementById('data-types-container');
+
+            showTypesCheckbox.addEventListener('change', () => {
+                if (showTypesCheckbox.checked) {
+                    const headers = Object.keys(data[0]);
+                    const detectDataType = (values) => {
+                        const nonNull = values.filter(v => v !== null && v !== "" && v !== undefined);
+                        if (nonNull.length === 0) return 'String';
+                        if (nonNull.every(v => typeof v === 'number')) {
+                            return nonNull.every(v => Number.isInteger(v)) ? 'Integer' : 'Float';
+                        }
+                        return 'String';
+                    };
+
+                    let typesHTML = '<ul class="space-y-1">';
+                    headers.forEach(header => {
+                        const type = detectDataType(data.map(row => row[header]));
+                        const isCategorical = categoricalColumns.includes(header);
+                        typesHTML += `<li class="font-mono"><span class="font-semibold ${isCategorical ? 'text-green-400' : 'text-indigo-400'}">${header}:</span> <span class="text-gray-400">${type}</span></li>`;
+                    });
+                    typesHTML += '</ul>';
+                    
+                    dataTypesContainer.innerHTML = typesHTML;
+                    dataTypesContainer.classList.remove('hidden');
+                } else {
+                    dataTypesContainer.classList.add('hidden');
+                }
+            });
+
+            const applyBtn = document.getElementById('apply-encoding-btn');
+            const downloadBtn = document.getElementById('download-encoded-btn');
+            
+            applyBtn.addEventListener('click', () => {
+                pushStateToHistory(data);
+                const columnsSelect = document.getElementById('encoding-columns-select');
+                const typeSelect = document.getElementById('encoding-type-select');
+                const selectedColumns = Array.from(columnsSelect.selectedOptions).map(opt => opt.value);
+                if (selectedColumns.length === 0) { alert('Please select at least one column to encode.'); return; }
+                
+                let encodedData, newHeaders = [];
+                if (typeSelect.value === 'label') {
+                    encodedData = labelEncode(data, selectedColumns);
+                    reportState.encodingSummary = { type: 'Label Encoding', columns: selectedColumns };
+                } else {
+                    const result = oneHotEncode(data, selectedColumns);
+                    encodedData = result.data; 
+                    newHeaders = result.newHeaders;
+                    reportState.encodingSummary = { type: 'One-Hot Encoding', columns: selectedColumns, newColumns: newHeaders };
+                }
+                
+                encodedDataGlobal = encodedData; // Make encoded data available for download
+                reportState.processedData = encodedData; // Update the main data state
+                renderPreviewTables(data, encodedData, selectedColumns, newHeaders);
+                document.getElementById('encoding-preview-container').classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+                applyBtn.parentElement.innerHTML = `<button id="undo-encoding-btn" class="btn btn-secondary w-full">Undo Encoding</button>`;
+                document.getElementById('undo-encoding-btn').onclick = () => {
+                    const restoredData = popStateFromHistory();
+                    clearFutureUI(section);
+                    if (restoredData) renderEncodingSection(categoricalColumns, restoredData);
+                };
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                if (encodedDataGlobal) {
+                    const csv = Papa.unparse(encodedDataGlobal);
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "encoded_data.csv";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        }
+        
+        const CHART_COLORS = ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(96, 165, 250, 0.6)', 'rgba(251, 191, 36, 0.6)', 'rgba(167, 139, 250, 0.6)', 'rgba(251, 146, 60, 0.6)', 'rgba(156, 163, 175, 0.6)'];
+        const BORDER_COLORS = ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)', 'rgba(96, 165, 250, 1)', 'rgba(251, 191, 36, 1)', 'rgba(167, 139, 250, 1)', 'rgba(251, 146, 60, 1)', 'rgba(156, 163, 175, 1)'];
+
+        function createHistogram(canvasId, data, label) {
+            // ... (rest of the code is unchanged)
+            const bins = Math.ceil(Math.sqrt(data.length));
+            const min = Math.min(...data), max = Math.max(...data);
+            const range = max - min;
+            const binWidth = range > 0 ? range / bins : 1;
+            const histogramData = Array(bins).fill(0);
+            const labels = Array.from({length: bins}, (_, i) => `${(min + i * binWidth).toFixed(2)}-${(min + (i + 1) * binWidth).toFixed(2)}`);
+            data.forEach(val => {
+                let binIndex = range > 0 ? Math.floor((val - min) / binWidth) : 0;
+                if (val === max) binIndex = bins - 1;
+                histogramData[binIndex]++;
+            });
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: `Frequency of ${label}`, data: histogramData, backgroundColor: CHART_COLORS[0], borderColor: BORDER_COLORS[0], borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Frequency', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { title: { display: true, text: 'Value Bins', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } } }
+            });
+            chartInstances.push(chart);
+        }
+        
+        function createComparativeHistogram(canvasId, data, columns) {
+            // ... (rest of the code is unchanged)
+            const bins = 15;
+            let allValues = [];
+            columns.forEach(col => allValues.push(...data.map(row => row[col])));
+            const globalMin = Math.min(...allValues), globalMax = Math.max(...allValues);
+            const range = globalMax - globalMin;
+            const binWidth = range > 0 ? range / bins : 1;
+            const labels = Array.from({length: bins}, (_, i) => `${(globalMin + i * binWidth).toFixed(2)}`);
+            const datasets = columns.map((col, index) => {
+                const colData = data.map(row => row[col]);
+                const histogramData = Array(bins).fill(0);
+                colData.forEach(val => {
+                    let binIndex = range > 0 ? Math.floor((val - globalMin) / binWidth) : 0;
+                    if (val === globalMax) binIndex = bins - 1;
+                    histogramData[binIndex]++;
+                });
+                return { label: col, data: histogramData, backgroundColor: CHART_COLORS[index % CHART_COLORS.length], borderColor: BORDER_COLORS[index % BORDER_COLORS.length], borderWidth: 1 };
+            });
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Frequency', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { title: { display: true, text: 'Value Bins', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } }, plugins: { legend: { position: 'top', labels: { color: '#cbd5e1' } } } }
+            });
+            chartInstances.push(chart);
+            return chart;
+        }
+        
+        function createCorrelationBarChart(canvasId, labels, data) {
+            // ... (rest of the code is unchanged)
+            const existingChart = Chart.getChart(canvasId);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        label: 'Average Absolute Correlation', 
+                        data: data, 
+                        backgroundColor: CHART_COLORS[2], 
+                        borderColor: BORDER_COLORS[2], 
+                        borderWidth: 1 
+                    }] 
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { beginAtZero: true, title: { display: true, text: 'Correlation Score', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } },
+                        y: { ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            chartInstances.push(chart);
+        }
+
+
+        function createBoxPlot(canvasId, data, label) {
+            // ... (rest of the code is unchanged)
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'boxplot',
+                data: { labels: [label], datasets: [{ label: `Distribution of ${label}`, data: [data], backgroundColor: CHART_COLORS[1], borderColor: BORDER_COLORS[1], borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Value', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } }, plugins: { legend: { display: false } } }
+            });
+            chartInstances.push(chart);
+        }
+        
+        function createComparisonBarChart(canvasId, data, categoricalVar, numericalVars) {
+            // ... (rest of the code is unchanged)
+            const labels = [...new Set(data.map(row => row[categoricalVar]))];
+            const datasets = numericalVars.map((numVar, index) => {
+                const meanData = labels.map(label => {
+                    const values = data.filter(row => row[categoricalVar] === label).map(row => row[numVar]);
+                    return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+                });
+                return { label: `Mean of ${numVar}`, data: meanData, backgroundColor: CHART_COLORS[index % CHART_COLORS.length], borderColor: BORDER_COLORS[index % BORDER_COLORS.length], borderWidth: 1 };
+            });
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar', data: { labels, datasets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Mean Value', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { title: { display: true, text: categoricalVar, color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } }, plugins: { legend: { display: true, position: 'top', labels: { color: '#cbd5e1' } } } }
+            });
+            chartInstances.push(chart);
+            return chart;
+        }
+
+        function createComparisonBoxPlot(canvasId, data, categoricalVar, numericalVars) {
+            // ... (rest of the code is unchanged)
+            const labels = [...new Set(data.map(row => row[categoricalVar]))];
+            const datasets = numericalVars.map((numVar, index) => ({
+                label: `Distribution of ${numVar}`,
+                data: labels.map(label => data.filter(row => row[categoricalVar] === label).map(row => row[numVar])),
+                backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                borderColor: BORDER_COLORS[index % BORDER_COLORS.length],
+                borderWidth: 1
+            }));
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'boxplot', data: { labels, datasets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Value', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { title: { display: true, text: categoricalVar, color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } }, plugins: { legend: { display: true, position: 'top', labels: { color: '#cbd5e1' } } } }
+            });
+            chartInstances.push(chart);
+            return chart;
+        }
+
+        function createScatterPlot(canvasId, data, xLabel, yLabel) {
+            // ... (rest of the code is unchanged)
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: [{ label: `${yLabel} vs ${xLabel}`, data, backgroundColor: CHART_COLORS[2] }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: xLabel, color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, y: { title: { display: true, text: yLabel, color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } } }
+            });
+            chartInstances.push(chart);
+            return chart;
+        }
+
+        function createPieChart(canvasId, data, categoricalVar) {
+            // ... (rest of the code is unchanged)
+            const counts = data.reduce((acc, row) => { acc[row[categoricalVar]] = (acc[row[categoricalVar]] || 0) + 1; return acc; }, {});
+            const labels = Object.keys(counts), chartData = Object.values(counts);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'pie', data: { labels, datasets: [{ label: `Distribution of ${categoricalVar}`, data: chartData, backgroundColor: CHART_COLORS, borderColor: BORDER_COLORS, borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#cbd5e1' } } } }
+            });
+            chartInstances.push(chart);
+        }
+
+        function calculateCorrelation(x, y) {
+            // ... (rest of the code is unchanged)
+            if (!x || !y) return 0;
+            const n = x.length;
+            if (n === 0) return 0;
+            const sumX = x.reduce((a, b) => a + b, 0), sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((acc, val, i) => acc + val * y[i], 0);
+            const sumX2 = x.reduce((acc, val) => acc + val * val, 0), sumY2 = y.reduce((acc, val) => acc + val * val, 0);
+            const num = n * sumXY - sumX * sumY;
+            const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            return den === 0 ? 0 : num / den;
+        }
+
+        function createHeatmap(containerId, numericColumns, data) {
+            // ... (rest of the code is unchanged)
+            const matrix = numericColumns.map(col1 => numericColumns.map(col2 => calculateCorrelation(data.map(row => row[col1]), data.map(row => row[col2]))));
+            const container = document.getElementById(containerId);
+            let table = '<table class="heatmap-table">';
+            table += `<thead><tr><th>&nbsp;</th>${numericColumns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+            table += '<tbody>';
+            matrix.forEach((row, i) => {
+                table += `<tr><th>${numericColumns[i]}</th>`;
+                row.forEach(val => {
+                    const absVal = Math.abs(val);
+                    const color = val > 0 ? `rgba(96, 165, 250, ${absVal})` : `rgba(255, 99, 132, ${absVal})`;
+                    const textColor = absVal > 0.6 ? 'white' : '#111827';
+                    table += `<td style="background-color: ${color}; color: ${textColor};">${val.toFixed(2)}</td>`;
+                });
+                table += '</tr>';
+            });
+            table += '</tbody></table>';
+            if(container) container.innerHTML = table;
+            return table;
+        }
+
+        function renderPreviewTables(beforeData, afterData, changedCols, newCols = []) {
+            // ... (rest of the code is unchanged)
+            const beforeTable = document.getElementById('before-encoding-table'), afterTable = document.getElementById('after-encoding-table');
+            const render = (data, highlights) => {
+                const headers = Object.keys(data[0]);
+                let table = '<table class="preview-table">';
+                table += `<thead><tr>${headers.map(h => `<th class="${highlights.includes(h) ? 'highlight-col' : ''}">${h}</th>`).join('')}</tr></thead>`;
+                table += '<tbody>';
+                data.slice(0, 5).forEach(row => {
+                    table += '<tr>';
+                    headers.forEach(h => {
+                        const val = typeof row[h] === 'number' ? row[h].toFixed(4) : row[h];
+                        table += `<td class="${highlights.includes(h) ? 'highlight-col' : ''}">${val}</td>`;
+                    });
+                    table += '</tr>';
+                });
+                return table + '</tbody></table>';
+            };
+            beforeTable.innerHTML = render(beforeData, changedCols);
+            afterTable.innerHTML = render(afterData, [...changedCols, ...newCols]);
+        }
+        
+        function findOutliers(data, stats, method, threshold = 3) {
+            // ... (rest of the code is unchanged)
+            if (method === 'iqr') {
+                const { q1, q3 } = stats.fiveNumberSummary;
+                if(q1 === undefined || q3 === undefined) return [];
+                const iqr = q3 - q1;
+                const lowerBound = q1 - 1.5 * iqr, upperBound = q3 + 1.5 * iqr;
+                return data.filter(val => val < lowerBound || val > upperBound);
+            } else { // Z-Score
+                const { mean, stdDev } = stats;
+                if (stdDev === 0) return [];
+                return data.filter(val => Math.abs((val - mean) / stdDev) > threshold);
+            }
+        }
+
+        function updateBoxPlotWithOutliers(canvasId, label, data, outliers) {
+            // ... (rest of the code is unchanged)
+            const oldChartIndex = chartInstances.findIndex(c => c.canvas.id === canvasId);
+            if (oldChartIndex > -1) { chartInstances[oldChartIndex].destroy(); chartInstances.splice(oldChartIndex, 1); }
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'boxplot',
+                data: {
+                    labels: [label],
+                    datasets: [
+                        { label: `Distribution of ${label}`, data: [data], backgroundColor: CHART_COLORS[1], borderColor: BORDER_COLORS[1], borderWidth: 1 },
+                        { type: 'scatter', label: 'Outliers', data: outliers.map(val => ({ x: label, y: val })), backgroundColor: 'red', radius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Value', color: '#cbd5e1' }, ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } }, x: { ticks: { color: '#cbd5e1' }, grid: { color: '#4a5568' } } }, plugins: { legend: { display: true, labels: { color: '#cbd5e1' } } } }
+            });
+            chartInstances.push(newChart);
+        }
+
+        function labelEncode(data, columns) {
+            // ... (rest of the code is unchanged)
+            const newData = JSON.parse(JSON.stringify(data));
+            columns.forEach(col => {
+                const mapping = {}; let count = 0;
+                newData.forEach(row => {
+                    if (mapping[row[col]] === undefined) { mapping[row[col]] = count++; }
+                    row[col] = mapping[row[col]];
+                });
+            });
+            return newData;
+        }
+
+        function oneHotEncode(data, columns) {
+            // ... (rest of the code is unchanged)
+            let newData = JSON.parse(JSON.stringify(data));
+            let newHeaders = [];
+            columns.forEach(col => {
+                const uniqueValues = [...new Set(data.map(row => row[col]))];
+                uniqueValues.forEach(val => {
+                    const newColName = `${col}_${val}`;
+                    newHeaders.push(newColName);
+                    newData.forEach(row => { row[newColName] = row[col] === val ? 1 : 0; });
+                });
+                newData.forEach(row => delete row[col]);
+            });
+            return { data: newData, newHeaders };
+        }
+        
+        // --- Report Generation ---
+        function renderReportButton() {
+            // ... (rest of the code is unchanged)
+            reportButtonContainer.innerHTML = `<button id="download-report-btn" class="btn btn-primary">Download Analysis Report</button>`;
+            document.getElementById('download-report-btn').addEventListener('click', generateReport);
+        }
+
+        function generateReport() {
+            // ... (rest of the code is unchanged)
+            const { fileName, rowCount, colCount, imputationSummary, encodingSummary, numericColumns, categoricalColumns, processedData, stats } = reportState;
+            
+            // 1. Basic Info
+            const basicInfoHTML = `<h2>Dataset Overview</h2><ul><li><strong>File Name:</strong> ${fileName}</li><li><strong>Rows:</strong> ${rowCount}</li><li><strong>Columns:</strong> ${colCount}</li></ul>`;
+
+            // 2. Data Types
+            const dataTypesHTML = `<h2>Feature Types</h2><p><strong>Numerical Features:</strong> ${numericColumns.join(', ')}</p><p><strong>Categorical Features:</strong> ${categoricalColumns.join(', ')}</p>`;
+            
+            // 3. Missing Values
+            const missingValuesHTML = `<h2>Missing Value Summary</h2><ul>${imputationSummary.map(s => `<li>${s}</li>`).join('')}</ul>`;
+            
+            // 4. Descriptive Stats
+            let statsHTML = '<h2>Descriptive Statistics</h2><table class="report-table"><thead><tr><th>Feature</th><th>Mean</th><th>Median</th><th>Std. Dev.</th><th>Min</th><th>Max</th></tr></thead><tbody>';
+            numericColumns.forEach(col => {
+                const s = stats[col];
+                if (s) {
+                    statsHTML += `<tr><td>${col}</td><td>${s.mean.toFixed(2)}</td><td>${s.median.toFixed(2)}</td><td>${s.stdDev.toFixed(2)}</td><td>${s.fiveNumberSummary.min.toFixed(2)}</td><td>${s.fiveNumberSummary.max.toFixed(2)}</td></tr>`;
+                }
+            });
+            statsHTML += '</tbody></table>';
+
+            // 5. Correlation Matrix
+            const correlationHTML = `<h2>Correlation Matrix</h2><div style="overflow-x:auto;">${createHeatmap(null, numericColumns, processedData)}</div>`;
+
+            // 6. Encoding Summary
+            let encodingHTML = '<h2>Encoding Summary</h2>';
+            if (encodingSummary) {
+                encodingHTML += `<p><strong>Method:</strong> ${encodingSummary.type}</p><p><strong>Columns Encoded:</strong> ${encodingSummary.columns.join(', ')}</p>`;
+                if (encodingSummary.newColumns) {
+                    encodingHTML += `<p><strong>New Columns Created:</strong> ${encodingSummary.newColumns.join(', ')}</p>`;
+                }
+            } else {
+                encodingHTML += '<p>No encoding was applied to the dataset.</p>';
+            }
+
+            const reportHTML = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Analysis Report for ${fileName}</title>
+                    <style>
+                        body { font-family: 'Poppins', sans-serif; margin: 2rem; color: #333; }
+                        h1 { color: #111; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+                        h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 2rem; }
+                        .section { margin-bottom: 2rem; }
+                        ul { padding-left: 20px; } li { margin-bottom: 5px; }
+                        .report-table, .heatmap-table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+                        .report-table th, .report-table td, .heatmap-table th, .heatmap-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        .report-table th, .heatmap-table th { background-color: #f7f7f7; }
+                        .heatmap-table td { text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Analysis Report for ${fileName}</h1>
+                    <div class="section">${basicInfoHTML}</div>
+                    <div class="section">${dataTypesHTML}</div>
+                    <div class="section">${missingValuesHTML}</div>
+                    <div class="section">${statsHTML}</div>
+                    <div class="section">${correlationHTML}</div>
+                    <div class="section">${encodingHTML}</div>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([reportHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+
+    </script>
+</body>
+</html>
+
