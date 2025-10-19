@@ -1,7 +1,8 @@
 # 📊 CSV Statistical Analyzer
 
 A web-based tool that allows users to **analyze CSV files** interactively.  
-It provides **statistical summaries, data visualizations, missing value handling, duplicate management**, and more — all within a simple, user-friendly interface.
+It provides **statistical summaries, data visualizations, missing value handling, duplicate management**, and more — all within a simple, user-friendly interface.  
+This entire automated data analysis toolkit was **developed using Vibe Coding**.
 
 ---
 
@@ -44,26 +45,24 @@ It provides **statistical summaries, data visualizations, missing value handling
 1. Upload a `.csv` file from your local machine.  
 2. The app automatically loads your data and displays key statistics.  
 3. Choose operations like:
-   - Handle missing values
-   - Drop duplicates
-   - View top features
-   - Perform comparative analysis 
+   - Handle missing values  
+   - Drop duplicates  
+   - View top features  
+   - Perform comparative analysis  
 
 ---
 
 ## 🛠 Technologies Used
 
-- HTML, CSS, JavaScript
-- **Libraries:** Pandas, NumPy, Matplotlib, Seaborn
-
----
-
+- **Frontend:** HTML, CSS, JavaScript  
+- **Libraries:** Pandas, NumPy, Matplotlib, Seaborn  
+- **Development Platform:** Vibe Coding  
 
 ---
 
 ## 🧩 Future Improvements
 
-- Add correlation matrix visualization
+- Add correlation matrix visualization  
 - Include machine learning preview (like feature importance or predictions)  
 - Add dark/light theme switch  
 
@@ -80,7 +79,7 @@ This project is perfect for:
 
 ## 📎 Live Demo or Screenshot
 
-https://github.com/Salmantahir002/csv-analysis-tool/blob/main/Screenshot%202025-10-19%20232836.png
+![CSV Analyzer Screenshot](https://github.com/Salmantahir002/csv-analysis-tool/blob/main/Screenshot%202025-10-19%20232836.png)
 
 ---
 
@@ -95,8 +94,8 @@ Contributions are welcome!
 
 **Salman Tahir**  
 🎓 Computer Science Student | 💡 Data Analyst  
-📧 salmantahir610@gmail.com  
-🌐 https://github.com/Salmantahir002
+📧 [salmantahir610@gmail.com](mailto:salmantahir610@gmail.com)  
+🌐 [https://github.com/Salmantahir002](https://github.com/Salmantahir002)
 
 ---
 
